@@ -17,9 +17,9 @@ type Throttler struct {
 	doneChan      chan bool
 }
 
-// NewThrottler returns a Throttler that will govern the max number of workers and will
+// New returns a Throttler that will govern the max number of workers and will
 // work with the total number of jobs. It panics if maxWorkers < 1.
-func NewThrottler(maxWorkers, totalJobs int) *Throttler {
+func New(maxWorkers, totalJobs int) *Throttler {
 	if maxWorkers < 1 {
 		panic("maxWorkers has to be at least 1")
 	}

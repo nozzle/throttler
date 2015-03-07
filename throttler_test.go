@@ -48,7 +48,7 @@ func TestThrottle(t *testing.T) {
 		if test.TotalJobs != -1 {
 			totalJobs = test.TotalJobs
 		}
-		th := NewThrottler(test.MaxWorkers, totalJobs)
+		th := New(test.MaxWorkers, totalJobs)
 		for _, job := range test.Jobs {
 			go func(job string, th *Throttler) {
 				defer th.Done()
@@ -65,5 +65,5 @@ func TestThrottlePanic(t *testing.T) {
 			t.Fatal()
 		}
 	}()
-	NewThrottler(0, 100)
+	New(0, 100)
 }

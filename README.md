@@ -24,7 +24,7 @@ func ExampleThrottler() {
 		"http://www.somestupidname.com/",
 	}
 	// Create a new Throttler that will get 2 urls at a time
-	t := NewThrottler(2, len(urls))
+	t := throttler.New(2, len(urls))
 	for _, url := range urls {
 		// Launch a goroutine to fetch the URL.
 		go func(url string) {
