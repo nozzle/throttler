@@ -4,3 +4,4 @@
 server.command
 *.bak
 *.out
+*.cov

@@ -1,6 +1,6 @@
 # Throttler - intelligent WaitGroups
 
-[![GoDoc](https://godoc.org/github.com/nozzle/throttler?status.svg)](http://godoc.org/github.com/nozzle/throttler)
+[![GoDoc](https://godoc.org/github.com/nozzle/throttler?status.svg)](http://godoc.org/github.com/nozzle/throttler) [![Coverage Status](https://coveralls.io/repos/nozzle/throttler/badge.svg?branch=master)](https://coveralls.io/r/nozzle/throttler?branch=master) [ ![Codeship Status for nozzle/throttler](https://codeship.com/projects/02d33900-a744-0132-4353-2eb3789e9959/status?branch=master)](https://codeship.com/projects/67187)
 
 
  Throttler fills the gap between sync.WaitGroup and manually monitoring your goroutines with channels. The API is almost identical to Wait Groups, but it allows you to set a max number of workers that can be running simultaneously. It uses channels internally to block until a job completes by calling Done() or until all jobs have been completed.
