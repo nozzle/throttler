@@ -14,7 +14,7 @@ type Throttler struct {
 	totalJobs     int
 	jobsStarted   int
 	jobsCompleted int
-	doneChan      chan bool
+	doneChan      chan struct{}
 }
 
 // New returns a Throttler that will govern the max number of workers and will
@@ -26,7 +26,7 @@ func New(maxWorkers, totalJobs int) *Throttler {
 	return &Throttler{
 		maxWorkers: maxWorkers,
 		totalJobs:  totalJobs,
-		doneChan:   make(chan bool, totalJobs),
+		doneChan:   make(chan struct{}, totalJobs),
 	}
 }
 
@@ -60,5 +60,5 @@ func (t *Throttler) Throttle() {
 // can be activated. If Done is called less times than totalJobs,
 // Throttle will block forever
 func (t *Throttler) Done() {
-	t.doneChan <- true
+	t.doneChan <- struct{}{}
 }
