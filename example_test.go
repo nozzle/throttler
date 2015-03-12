@@ -27,7 +27,7 @@ func ExampleThrottler() {
 		go func(url string) {
 			// Let Throttler know when the goroutine completes
 			// so it can dispatch another worker
-			defer t.Done()
+			defer t.Done(nil)
 			// Fetch the URL.
 			http.Get(url)
 		}(url)
