@@ -29,14 +29,16 @@ func ExampleThrottler() {
 	for _, url := range urls {
 		// Launch a goroutine to fetch the URL.
 		go func(url string) {
+			// Fetch the URL.
+			err := http.Get(url)
 			// Let Throttler know when the goroutine completes
 			// so it can dispatch another worker
-			defer t.Done()
-			// Fetch the URL.
-			http.Get(url)
+			t.Done(err)
 		}(url)
 		// Pauses until a worker is available or all jobs have been completed
-		t.Throttle()
+		// Returning the total number of goroutines that have errored
+		// lets you choose to break out of the loop without starting any more
+		errorCount := t.Throttle()
 	}
 }
 ```

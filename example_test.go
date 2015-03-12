@@ -1,5 +1,7 @@
 package throttler
 
+import "github.com/nozzle/throttler"
+
 type httpPkg struct{}
 
 func (httpPkg) Get(url string) {}
@@ -21,17 +23,19 @@ func ExampleThrottler() {
 		"http://www.somestupidname.com/",
 	}
 	// Create a new Throttler that will get 2 urls at a time
-	t := New(2, len(urls))
+	t := throttler.New(2, len(urls))
 	for _, url := range urls {
 		// Launch a goroutine to fetch the URL.
 		go func(url string) {
+			// Fetch the URL.
+			err := http.Get(url)
 			// Let Throttler know when the goroutine completes
 			// so it can dispatch another worker
-			defer t.Done(nil)
-			// Fetch the URL.
-			http.Get(url)
+			t.Done(err)
 		}(url)
 		// Pauses until a worker is available or all jobs have been completed
-		t.Throttle()
+		// Returning the total number of goroutines that have errored
+		// lets you choose to break out of the loop without starting any more
+		errorCount := t.Throttle()
 	}
 }
