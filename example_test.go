@@ -4,7 +4,7 @@ import "fmt"
 
 type httpPkg struct{}
 
-func (httpPkg) Get(url string) {}
+func (httpPkg) Get(url string) error { return nil }
 
 var http httpPkg
 
@@ -18,7 +18,7 @@ func ExampleThrottler() {
 		"http://www.somestupidname.com/",
 	}
 	// Create a new Throttler that will get 2 urls at a time
-	t := throttler.New(2, len(urls))
+	t := New(2, len(urls))
 	for _, url := range urls {
 		// Launch a goroutine to fetch the URL.
 		go func(url string) {
@@ -32,6 +32,9 @@ func ExampleThrottler() {
 		// Returning the total number of goroutines that have errored
 		// lets you choose to break out of the loop without starting any more
 		errorCount := t.Throttle()
+		if errorCount > 0 {
+			break
+		}
 	}
 }
 
