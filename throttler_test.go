@@ -58,6 +58,9 @@ func TestThrottle(t *testing.T) {
 			}(job, th)
 			th.Throttle()
 		}
+		if th.Err() != nil {
+			fmt.Println("err:", th.Err())
+		}
 	}
 }
 
@@ -75,6 +78,11 @@ func TestThrottleWithErrors(t *testing.T) {
 				"job21", "job22", "job23", "job24", "job25", "job26", "job27", "job28", "job29", "job30",
 				"job31", "job32", "job33", "job34", "job35", "job36", "job37", "job38", "job39", "job40",
 				"job41", "job42", "job43", "job44", "job45", "job46", "job47", "job48", "job49", "job50"},
+			5,
+			-1,
+		}, {
+			"Standard implementation",
+			[]string{"job01", "job02"},
 			5,
 			-1,
 		},
@@ -99,8 +107,11 @@ func TestThrottleWithErrors(t *testing.T) {
 			}(job, th)
 			th.Throttle()
 		}
-		if len(th.Err()) != totalJobs/2 {
+		if len(th.Errs()) != totalJobs/2 {
 			t.Fatal()
+		}
+		if th.Err() != nil {
+			fmt.Println("err:", th.Err())
 		}
 	}
 }

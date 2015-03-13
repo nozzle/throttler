@@ -5,12 +5,15 @@
 
  Throttler fills the gap between sync.WaitGroup and manually monitoring your goroutines with channels. The API is almost identical to Wait Groups, but it allows you to set a max number of workers that can be running simultaneously. It uses channels internally to block until a job completes by calling Done() or until all jobs have been completed. It also provides a built in error channel that captures your goroutine errors and provides access to them as `[]error` after you exit the loop.
 
-See a fully functional example on the playground at http://bit.ly/throttler-docs-v2
+See a fully functional example on the playground at http://bit.ly/throttler-v3
 
 Compare the Throttler example to the sync.WaitGroup example from http://golang.org/pkg/sync/#example_WaitGroup
 
 *3/12 - Breaking change*
 Throttler handles errors by default now and `Done` requires an error to be passed into it. If your goroutine doesn't generate errors, just call `Done(nil)` and there won't be any performance impact.
+
+*3/13 - Breaking change*
+`Err()` now returns an error. To get the slice of errors caught by Throttler, use `Errs()`.
 
 ### How to use Throttler
 

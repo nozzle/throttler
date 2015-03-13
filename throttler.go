@@ -3,15 +3,19 @@
 // a max number of workers that can be running simultaneously. It uses channels internally
 // to block until a job completes by calling Done(err) or until all jobs have been completed.
 //
-// After exiting the loop where you are using Throttler, you can call the .Err method to get
-// an array of all the goroutine errors that occurred.
+// After exiting the loop where you are using Throttler, you can call the `Err` or `Errs` method to check
+// for errors. `Err` will return a single error representative of all the errors Throttler caught. The
+// `Errs` method will return all the errors as a slice of errors (`[]error`).
 //
 // Compare the Throttler example to the sync.WaitGroup example http://golang.org/pkg/sync/#example_WaitGroup
 //
-// See a fully functional example on the playground at http://bit.ly/throttler-docs-v2
+// See a fully functional example on the playground at http://bit.ly/throttler-v3
 package throttler
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Throttler struct {
 	maxWorkers    int
@@ -80,7 +84,25 @@ func (t *Throttler) Done(err error) {
 	}
 }
 
-// Err returns a slice of any errors that were received from calling Done()
-func (t *Throttler) Err() []error {
+// Err returns an error representative of all errors caught by throttler
+func (t *Throttler) Err() error {
+	if len(t.errs) == 0 {
+		return nil
+	}
+	return multiError(t.errs)
+}
+
+// Errs returns a slice of any errors that were received from calling Done()
+func (t *Throttler) Errs() []error {
 	return t.errs
+}
+
+type multiError []error
+
+func (te multiError) Error() string {
+	errString := te[0].Error()
+	if len(te) > 1 {
+		errString += fmt.Sprintf(" (and %d more errors)", len(te)-1)
+	}
+	return errString
 }
