@@ -109,7 +109,7 @@ func TestThrottleWithErrors(t *testing.T) {
 			th.Throttle()
 		}
 		if len(th.Errs()) != totalJobs/2 {
-			t.Fatal(th)
+			t.Fatal("The wrong number of errors were returned")
 		}
 		if th.Err() != nil {
 			fmt.Println("err:", th.Err())
@@ -120,7 +120,7 @@ func TestThrottleWithErrors(t *testing.T) {
 func TestThrottlePanic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Fatal(nil)
+			t.Fatal("Test failed to panic")
 		}
 	}()
 	New(0, 100)
