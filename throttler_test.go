@@ -3,6 +3,7 @@ package throttler
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -123,4 +124,72 @@ func TestThrottlePanic(t *testing.T) {
 		}
 	}()
 	New(0, 100)
+}
+
+func TestBatchedThrottler(t *testing.T) {
+	var tests = []struct {
+		Desc                  string
+		ToBeBatched           []string
+		MaxWorkers            int
+		BatchSize             int
+		ExpectedBatchedSlices [][]string
+	}{
+		{
+			"Standard implementation",
+			[]string{"item01", "item02", "item03", "item04", "item05", "item06", "item07", "item08", "item09", "item10",
+				"item11", "item12", "item13", "item14", "item15", "item16", "item17", "item18", "item19", "item20",
+				"item21", "item22", "item23", "item24", "item25", "item26", "item27", "item28", "item29", "item30",
+				"item31", "item32", "item33", "item34", "item35", "item36", "item37", "item38", "item39", "item40",
+				"item41", "item42", "item43", "item44", "item45", "item46", "item47", "item48", "item49",
+			},
+			10,
+			2,
+			[][]string{
+				{"item01", "item02"},
+				{"item03", "item04"},
+				{"item05", "item06"},
+				{"item07", "item08"},
+				{"item09", "item10"},
+				{"item11", "item12"},
+				{"item13", "item14"},
+				{"item15", "item16"},
+				{"item17", "item18"},
+				{"item19", "item20"},
+				{"item21", "item22"},
+				{"item23", "item24"},
+				{"item25", "item26"},
+				{"item27", "item28"},
+				{"item29", "item30"},
+				{"item31", "item32"},
+				{"item33", "item34"},
+				{"item35", "item36"},
+				{"item37", "item38"},
+				{"item39", "item40"},
+				{"item41", "item42"},
+				{"item43", "item44"},
+				{"item45", "item46"},
+				{"item47", "item48"},
+				{"item49"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		th := NewBatchedThrottler(test.MaxWorkers, len(test.ToBeBatched), test.BatchSize)
+		for i := 0; i < th.TotalJobs(); i++ {
+			go func(tbbSlice []string, expectedSlice []string) {
+				if !reflect.DeepEqual(tbbSlice, expectedSlice) {
+					t.Fatalf("wanted: %#v | got: %#v", expectedSlice, tbbSlice)
+				}
+				th.Done(nil)
+			}(test.ToBeBatched[th.BatchStartIndex():th.BatchEndIndex()], test.ExpectedBatchedSlices[i])
+			if errCount := th.Throttle(); errCount > 0 {
+				break
+			}
+		}
+
+		if th.Err() != nil {
+			fmt.Println("err:", th.Err())
+		}
+	}
 }

@@ -14,12 +14,15 @@ package throttler
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
 type Throttler struct {
 	maxWorkers    int
 	workerCount   int
+	batchingTotal int
+	batchSize     int
 	totalJobs     int
 	jobsStarted   int
 	jobsCompleted int
@@ -37,10 +40,20 @@ func New(maxWorkers, totalJobs int) *Throttler {
 	}
 	return &Throttler{
 		maxWorkers: maxWorkers,
+		batchSize:  1,
 		totalJobs:  totalJobs,
 		doneChan:   make(chan struct{}, totalJobs),
 		errsMutex:  &sync.Mutex{},
 	}
+}
+
+// NewBatchedThrottler returns a Throttler (just like New), but also enables batching.
+func NewBatchedThrottler(maxWorkers, batchingTotal, batchSize int) *Throttler {
+	totalJobs := int(math.Ceil(float64(batchingTotal) / float64(batchSize)))
+	t := New(maxWorkers, totalJobs)
+	t.batchSize = batchSize
+	t.batchingTotal = batchingTotal
+	return t
 }
 
 // Throttle works similarly to sync.WaitGroup, except inside your goroutine dispatch
@@ -105,4 +118,20 @@ func (te multiError) Error() string {
 		errString += fmt.Sprintf(" (and %d more errors)", len(te)-1)
 	}
 	return errString
+}
+
+func (t *Throttler) BatchStartIndex() int {
+	return t.jobsStarted * t.batchSize
+}
+
+func (t *Throttler) BatchEndIndex() int {
+	end := (t.jobsStarted + 1) * t.batchSize
+	if end > t.batchingTotal {
+		end = t.batchingTotal
+	}
+	return end
+}
+
+func (t *Throttler) TotalJobs() int {
+	return t.totalJobs
 }

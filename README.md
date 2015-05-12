@@ -15,6 +15,9 @@ Throttler handles errors by default now and `Done` requires an error to be passe
 *3/13 - Breaking change*
 `Err()` now returns an error. To get the slice of errors caught by Throttler, use `Errs()`.
 
+*5/12 - Added Batching Feature*
+User can now use `NewBatchedThrottler` instead of `New` to access the new batching features. See `TestBatchedThrottler` in `throttler_test.go` for usage example.
+
 ### How to use Throttler
 
 ```
