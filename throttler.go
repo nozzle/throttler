@@ -13,6 +13,7 @@
 package throttler
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -75,8 +76,7 @@ func (t *Throttler) Throttle() int {
 			t.jobsCompleted++
 			t.workerCount--
 		case <-t.cancelChan:
-			t.jobsStarted = t.totalJobs
-			t.jobsCompleted = t.totalJobs
+			t.cancel()
 		}
 
 	}
@@ -86,7 +86,7 @@ func (t *Throttler) Throttle() int {
 			select {
 			case <-t.doneChan:
 			case <-t.cancelChan:
-				t.jobsCompleted = t.totalJobs
+				t.cancel()
 			}
 			t.jobsCompleted++
 		}
@@ -150,3 +150,11 @@ func (t *Throttler) TotalJobs() int {
 func (t *Throttler) SetCancel(cancelChan <-chan struct{}) {
 	t.cancelChan = cancelChan
 }
+
+func (t *Throttler) cancel() {
+	for i := 0; i < t.jobsCompleted; i++ {
+		t.Done(ErrCancelled)
+	}
+}
+
+var ErrCancelled = errors.New("The throttler was externally cancelled")
