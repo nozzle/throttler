@@ -26,6 +26,7 @@ type Throttler struct {
 	totalJobs     int
 	jobsStarted   int
 	jobsCompleted int
+	cancelChan    <-chan struct{}
 	doneChan      chan struct{}
 	errsMutex     *sync.Mutex
 	errs          []error
@@ -69,14 +70,24 @@ func (t *Throttler) Throttle() int {
 	t.workerCount++
 
 	if t.workerCount == t.maxWorkers {
-		<-t.doneChan
-		t.jobsCompleted++
-		t.workerCount--
+		select {
+		case <-t.doneChan:
+			t.jobsCompleted++
+			t.workerCount--
+		case <-t.cancelChan:
+			t.jobsStarted = t.totalJobs
+			t.jobsCompleted = t.totalJobs
+		}
+
 	}
 
 	if t.jobsStarted == t.totalJobs {
 		for t.jobsCompleted < t.totalJobs {
-			<-t.doneChan
+			select {
+			case <-t.doneChan:
+			case <-t.cancelChan:
+				t.jobsCompleted = t.totalJobs
+			}
 			t.jobsCompleted++
 		}
 	}
@@ -134,4 +145,8 @@ func (t *Throttler) BatchEndIndex() int {
 
 func (t *Throttler) TotalJobs() int {
 	return t.totalJobs
+}
+
+func (t *Throttler) SetCancel(cancelChan <-chan struct{}) {
+	t.cancelChan = cancelChan
 }
