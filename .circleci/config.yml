@@ -18,3 +18,5 @@ jobs:
             
       # specify any bash command here prefixed with `run: `
       - run: go test -coverprofile=coverage.txt -covermode=atomic
+      - run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
+
