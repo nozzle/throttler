@@ -88,13 +88,13 @@ func (t *Throttler) Throttle() int {
 // can be activated. If Done is called less times than totalJobs,
 // Throttle will block forever
 func (t *Throttler) Done(err error) {
-	t.doneChan <- struct{}{}
 	if err != nil {
 		t.errsMutex.Lock()
 		t.errs = append(t.errs, err)
 		t.errorCount++
 		t.errsMutex.Unlock()
 	}
+	t.doneChan <- struct{}{}
 }
 
 // Err returns an error representative of all errors caught by throttler
