@@ -178,10 +178,11 @@ func TestBatchedThrottler(t *testing.T) {
 		th := NewBatchedThrottler(test.MaxWorkers, len(test.ToBeBatched), test.BatchSize)
 		for i := 0; i < th.TotalJobs(); i++ {
 			go func(tbbSlice []string, expectedSlice []string) {
+				var err error
 				if !reflect.DeepEqual(tbbSlice, expectedSlice) {
-					t.Fatalf("wanted: %#v | got: %#v", expectedSlice, tbbSlice)
+					err = fmt.Errorf("wanted: %#v | got: %#v", expectedSlice, tbbSlice)
 				}
-				th.Done(nil)
+				th.Done(err)
 			}(test.ToBeBatched[th.BatchStartIndex():th.BatchEndIndex()], test.ExpectedBatchedSlices[i])
 			if errCount := th.Throttle(); errCount > 0 {
 				break
@@ -189,7 +190,7 @@ func TestBatchedThrottler(t *testing.T) {
 		}
 
 		if th.Err() != nil {
-			fmt.Println("err:", th.Err())
+			t.Fatal(th.Err())
 		}
 	}
 }
