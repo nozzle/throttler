@@ -58,6 +58,16 @@ func NewBatchedThrottler(maxWorkers, batchingTotal, batchSize int) *Throttler {
 	return t
 }
 
+// SetMaxWorkers lets you change the total number of workers that can run concurrently. NOTE: If
+// all workers are currently running, this setting is not guaranteed to take effect until one of them
+// completes and Throttle() is called again
+func (t *Throttler) SetMaxWorkers(maxWorkers int) {
+	if maxWorkers < 1 {
+		panic("maxWorkers has to be at least 1")
+	}
+	atomic.StoreInt32(&t.maxWorkers, int32(maxWorkers))
+}
+
 // Throttle works similarly to sync.WaitGroup, except inside your goroutine dispatch
 // loop rather than after. It will not block until the number of active workers
 // matches the max number of workers designated in the call to NewThrottler or
@@ -70,12 +80,16 @@ func (t *Throttler) Throttle() int {
 	atomic.AddInt32(&t.jobsStarted, 1)
 	atomic.AddInt32(&t.workerCount, 1)
 
+	// check to see if the current number of workers equals the max number of workers
+	// if they are equal, wait for one to finish before continuing
 	if atomic.LoadInt32(&t.workerCount) == atomic.LoadInt32(&t.maxWorkers) {
 		atomic.AddInt32(&t.jobsCompleted, 1)
 		atomic.AddInt32(&t.workerCount, -1)
 		<-t.doneChan
 	}
 
+	// check to see if all of the jobs have been started, and if so, wait until all
+	// jobs have been completed before continuing
 	if atomic.LoadInt32(&t.jobsStarted) == atomic.LoadInt32(&t.totalJobs) {
 		for atomic.LoadInt32(&t.jobsCompleted) < atomic.LoadInt32(&t.totalJobs) {
 			atomic.AddInt32(&t.jobsCompleted, 1)
