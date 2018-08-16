@@ -1,4 +1,4 @@
-// Throttler fills the gap between sync.WaitGroup and manually monitoring your goroutines
+// Package throttler fills the gap between sync.WaitGroup and manually monitoring your goroutines
 // with channels. The API is almost identical to Wait Groups, but it allows you to set
 // a max number of workers that can be running simultaneously. It uses channels internally
 // to block until a job completes by calling Done(err) or until all jobs have been completed.
@@ -18,6 +18,7 @@ import (
 	"sync"
 )
 
+// Throttler stores all the information about the number of workers, the active workers and error information
 type Throttler struct {
 	maxWorkers    int
 	workerCount   int
@@ -120,10 +121,17 @@ func (te multiError) Error() string {
 	return errString
 }
 
+// BatchStartIndex returns the starting index for the next batch. The job count isn't modified
+// until th.Throttle() is called, so if you don't call Throttle before executing this
+// again, it will return the same index as before
 func (t *Throttler) BatchStartIndex() int {
 	return t.jobsStarted * t.batchSize
 }
 
+// BatchEndIndex returns the ending index for the next batch. It either returns the full batch size
+// or the remaining amount of jobs. The job count isn't modified
+// until th.Throttle() is called, so if you don't call Throttle before executing this
+// again, it will return the same index as before.
 func (t *Throttler) BatchEndIndex() int {
 	end := (t.jobsStarted + 1) * t.batchSize
 	if end > t.batchingTotal {
@@ -132,6 +140,7 @@ func (t *Throttler) BatchEndIndex() int {
 	return end
 }
 
+// TotalJobs returns the total number of jobs throttler is performing
 func (t *Throttler) TotalJobs() int {
 	return t.totalJobs
 }
