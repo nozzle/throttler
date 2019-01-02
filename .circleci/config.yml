@@ -19,4 +19,7 @@ jobs:
       # specify any bash command here prefixed with `run: `
       - run: go test -coverprofile=coverage.txt -covermode=atomic
       - run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
-
+      - run: go get -u github.com/haya14busa/reviewdog/cmd/reviewdog
+      - run: go get -u github.com/golang/lint/golint
+      - run: go vet -all -shadowstrict . 2>&1 | reviewdog -f=govet -ci="circle-ci"
+      - run: golint -set_exit_status . | reviewdog -f=golint -diff="git diff origin/master" -ci="circle-ci"
